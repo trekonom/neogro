@@ -1,0 +1,38 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit README.Rmd -->
+
+# neogro
+
+`neogro` is an R package that implements fast C++ (via Rcpp) solvers for the **deterministic neoclassical growth model** using value function iteration. The package provides tools to compute value and policy functions for a standard Cobb–Douglas economy.
+
+## Installation
+
+You can install the development version from GitHub:
+
+```r
+# install.packages("devtools")
+devtools::install_github("trekonom/neogro")
+```
+
+```{r}
+library(neogro)
+
+# Solve the model with default parameters
+result <- rcpp_neogro()
+
+# View the first few rows
+head(result)
+
+# Plot the policy function
+plot(
+  result$k,
+  result$kopt - result$k,
+  type = "l",
+  main = "Policy Function",
+  xlab = "Capital (k)",
+  ylab = "Next Period Capital (k')"
+)
+```

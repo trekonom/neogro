@@ -1,0 +1,99 @@
+---
+title: "Analytical Solution of the Neoclassical Growth Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Analytical Solution of the Neoclassical Growth Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+This vignette demonstrates how to solve the **deterministic neoclassical growth model** analytically, and how the results compare to the numerical solution computed by the `rcpp_neogro()` function.
+
+The model assumes a representative household that chooses capital \(k_{t+1}\) to maximize:
+
+\[
+\sum_{t=0}^{\infty} \beta^t u(c_t),
+\]
+subject to:
+\[
+c_t + k_{t+1} = f(k_t) + (1-\delta)k_t,
+\]
+where:
+
+- \(f(k) = k^\alpha\) is the Cobb–Douglas production function,
+- \(u(c) = \frac{c^{1-\sigma} - 1}{1-\sigma}\) is the CRRA utility function,
+- \(\beta \in (0,1)\) is the discount factor,
+- \(\delta\) is the depreciation rate of capital.
+
+# Steady State
+
+In steady state, \(k_{t+1} = k_t = k^*\) and \(c_t = c^*\). The Euler equation is:
+
+\[
+u'(c_t) = \beta u'(c_{t+1}) [f'(k_{t+1}) + 1 - \delta].
+\]
+
+Using the CRRA utility function \(u'(c) = c^{-\sigma}\), this simplifies to:
+
+\[
+1 = \beta [\alpha (k^*)^{\alpha-1} + 1 - \delta].
+\]
+
+Solving for \(k^*\) yields:
+
+\[
+k^* = \left( \frac{\alpha}{\frac{1}{\beta} - 1 + \delta} \right)^{\frac{1}{1-\alpha}}.
+\]
+
+Once \(k^*\) is known, consumption \(c^*\) is:
+
+\[
+c^* = k^{*\alpha} - \delta k^*.
+\]
+
+# Analytical Computation in R
+
+```{r}
+# Parameters
+beta  <- 0.96
+alpha <- 0.28
+delta <- 0.05
+sigma <- 2.0
+
+# Steady state capital
+k_star <- (alpha / (1/beta - 1 + delta))^(1/(1 - alpha))
+
+# Steady state consumption
+c_star <- k_star^alpha - delta * k_star
+
+k_star
+c_star
+```
+
+# Comparison with Numerical Solution
+
+The `rcpp_neogro()` function numerically solves the Bellman equation using value function iteration. We can check if the policy function converges to \(k^*\).
+
+```{r}
+library(neogro)
+
+# Numerical solution
+k_steady <- k_steady_state(beta = beta, alpha = alpha, delta = delta)
+
+# Numerical solution
+res <- neogro(NK = 400, beta = beta, alpha = alpha, delta = delta)
+
+# Approximate steady state from the policy function
+k_num <- res$k[which.min(abs(res$kopt - res$k))]
+
+cat("Analytical k* =", k_star, "\n")
+cat("k_steady k* =", k_steady, "\n")
+cat("Numerical k*  =", k_num,  "\n")
+```
+
+# Conclusion
+
+The analytical solution provides a benchmark for verifying numerical methods.  
+For more complex versions of the growth model (e.g., stochastic shocks), the numerical approach becomes essential.
