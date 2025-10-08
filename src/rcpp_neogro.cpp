@@ -49,16 +49,16 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::export]]
 DataFrame neogro(int NK = 200,
-                      int MAXIT = 500,
-                      double TOL = 1e-5,
-                      double TOL1 = 1e-7,
-                      double NEG = -1e10,
-                      double ZETA = 0.05,
-                      double beta = 0.994,
-                      double sigma = 2.0,
-                      double alpha = 0.28,
-                      double delta = 0.0,
-                      bool verbose = false) {
+                 int MAXIT = 500,
+                 double TOL = 1e-5,
+                 double TOL1 = 1e-7,
+                 double NEG = -1e10,
+                 double ZETA = 0.05,
+                 double beta = 0.994,
+                 double sigma = 2.0,
+                 double alpha = 0.28,
+                 double delta = 0.0,
+                 bool verbose = false) {
 
   NumericVector k(NK), kopt(NK), copt(NK), iopt(NK), y(NK), ropt(NK),
     v(NK), vold(NK), vsub(NK);
@@ -97,14 +97,15 @@ DataFrame neogro(int NK = 200,
     h++;
     for (int i = 0; i < NK; ++i) vold[i] = v[i];
 
-    int l0 = 0;
+    int l0 = -1;
     for (int i = 0; i < NK; ++i) {
       int l = l0, lopt;
       double v0 = NEG;
-      double ax = 0.0, bx = -1.0, cx = k[NK-1];
+      double ax = k[0], bx = k[0], cx = k[NK-1];
       double c, v1;
 
-      while (l < NK) {
+      while (l < NK-1) {
+        l += 1;
         c = consumption(k[i], k[l], params);
         if (c > 0.0) {
           v1 = bellman(k[i], k[l], k, vold, params);
@@ -119,14 +120,13 @@ DataFrame neogro(int NK = 200,
               lopt = l;
             }
             v0 = v1;
-            l0 = l;
+            l0 = l-1;
           } else {
-            l = NK;
+            l = NK-1;
           }
         } else {
-          l = NK;
+          l = NK-1;
         }
-        l += 1;
       }
 
       if (ax == bx) {
@@ -138,14 +138,14 @@ DataFrame neogro(int NK = 200,
       }
 
       if (ax == bx) {
-        bx = ax + ZETA * (cx - ax);
+        bx = ax + ZETA * (k[1] - k[0]);
         if (value(bx, k, vold) < value(ax, k, vold)) {
           kopt[i] = k[0];
         } else {
           kopt[i] = golden(k[i], k, vold, params, ax, bx, cx, TOL1);
         }
       } else if (bx == cx) {
-        bx = cx - ZETA * (cx - ax);
+        bx = cx - ZETA * (k[NK-1] - k[NK-2]);
         if (value(bx, k, vold) < value(cx, k, vold)) {
           kopt[i] = k[NK-1];
         } else {
@@ -157,6 +157,7 @@ DataFrame neogro(int NK = 200,
       v[i] = bellman(k[i], kopt[i], k, vold, params);
     }
 
+    // Root mean squared error
     crit = 0.0;
     for (int i = 0; i < NK; ++i) {
       vsub[i] = pow(v[i] - vold[i], 2.0);
@@ -193,6 +194,7 @@ DataFrame neogro(int NK = 200,
     Named("copt") = copt,
     Named("iopt") = iopt,
     Named("y") = y,
-    Named("ropt") = ropt
+    Named("ropt") = ropt,
+    Named("vopt") = v
   );
 }
