@@ -21,7 +21,7 @@ devtools::install_github("trekonom/neogro")
 library(neogro)
 
 # Solve the model with default parameters
-result <- rcpp_neogro()
+result <- neogro()
 
 # View the first few rows
 head(result)
@@ -29,7 +29,7 @@ head(result)
 # Plot the policy function
 plot(
   result$k,
-  result$kopt - result$k,
+  result$kopt,
   type = "l",
   main = "Policy Function",
   xlab = "Capital (k)",
