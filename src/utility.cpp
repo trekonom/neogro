@@ -9,7 +9,7 @@ double interp(NumericVector x, NumericVector y, double xout) {
   for (int i = 0; i < n-1; ++i) {
     if (xout >= x[i] && xout < x[i+1]) {
       double t = (xout - x[i]) / (x[i+1] - x[i]);
-      return y[i] * (1-t) + y[i+1] * t;
+      return y[i] * (1.0-t) + y[i+1] * t;
     }
   }
   return y[n-1];
@@ -38,7 +38,7 @@ double k_steady_state(double alpha, double beta, double delta) {
 // utiliy
 double u(double c, double sigma) {
   if (sigma != 1.0) {
-    return (pow(c, 1.0 - sigma) - 1.0) / (1.0 - sigma);
+    return (pow(c, 1.0 - sigma)) / (1.0 - sigma);
   } else {
     return log(c);
   }
@@ -86,7 +86,7 @@ double bellman(double k0, double k1, NumericVector k, NumericVector vold, const 
     return params.neg;
   } else {
     if (k1 >= k[k.size()-1]) {
-      return params.neg;
+      return pow(k1, 2) * params.neg;
     } else {
       return u(c, params.sigma) + params.beta * value(k1, k, vold);
     }
@@ -116,7 +116,7 @@ double golden(double xout,
   double f1 = -bellman(xout, x1, k, vold, params);
   double f2 = -bellman(xout, x2, k, vold, params);
 
-  while (fabs(x3 - x0) > tol * (fabs(x1) + fabs(x2) > 1.0 ? fabs(x1) + fabs(x2) : 1.0)) {
+  while (fabs(x3 - x0) > tol * (fabs(x1) + fabs(x2))) {
     if (f2 < f1) {
       x0 = x1;
       x1 = x2;
@@ -131,7 +131,7 @@ double golden(double xout,
       f1 = -bellman(xout, x1, k, vold, params);
     }
   }
-  if (bellman(xout, x1, k, vold, params) <= bellman(xout, x2, k, vold, params)) {
+  if (f1 <= f2) {
     return x1;
   } else {
     return x2;
