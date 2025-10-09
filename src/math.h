@@ -75,4 +75,6 @@ double golden(
   return golden(func, a, b, c, tol, params);
 }
 
+double interp(NumericVector x, NumericVector y, double xout);
+
 #endif

@@ -26,6 +26,5 @@ double residuals(double k1, double c0, NumericVector k, NumericVector copt, cons
 double value(double x, NumericVector k, NumericVector vold);
 double bellman1(double k1, const Params params);
 double bellman(double k0, double k1, const Params params);
-double interp(NumericVector x, NumericVector y, double xout);
 
 #endif
