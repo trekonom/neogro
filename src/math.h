@@ -3,6 +3,9 @@
 
 #include <cmath>
 #include <type_traits>
+#include <vector>
+#include <stdexcept>
+#include <algorithm>
 
 #include <Rcpp.h>
 using namespace Rcpp;
@@ -75,6 +78,32 @@ double golden(
   return golden(func, a, b, c, tol, params);
 }
 
-double interp(NumericVector x, NumericVector y, double xout);
+// Generic linear interpolation
+template <typename Container>
+double interp(const Container& x, const Container& y, double xout) {
+  const size_t n = x.size();
+  if (n == 0) throw std::invalid_argument("Input vectors are empty");
+  if (n != y.size()) throw std::invalid_argument("x and y must have the same size");
+  if (n == 1) return y[0];  // single point
+
+  // Extrapolation
+  if (xout <= x[0]) return y[0];
+  if (xout >= x[n - 1]) return y[n - 1];
+
+  // Binary search using std::lower_bound
+  auto it = std::lower_bound(x.begin(), x.end(), xout);
+  size_t idx = std::distance(x.begin(), it);
+
+  // Ensure interval is valid
+  if (idx == 0) idx = 1;  // in case xout == x[0]
+
+  double x0 = x[idx - 1];
+  double x1 = x[idx];
+  double y0 = y[idx - 1];
+  double y1 = y[idx];
+
+  double t = (xout - x0) / (x1 - x0);
+  return y0 * (1.0 - t) + y1 * t;
+}
 
 #endif

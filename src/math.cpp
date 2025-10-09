@@ -2,20 +2,6 @@
 #include "math.h"
 using namespace Rcpp;
 
-// Linear interpolation
-double interp(NumericVector x, NumericVector y, double xout) {
-  int n = x.size();
-  if (xout <= x[0]) return y[0];
-  if (xout >= x[n-1]) return y[n-1];
-  for (int i = 0; i < n-1; ++i) {
-    if (xout >= x[i] && xout < x[i+1]) {
-      double t = (xout - x[i]) / (x[i+1] - x[i]);
-      return y[i] * (1.0-t) + y[i+1] * t;
-    }
-  }
-  return y[n-1];
-}
-
 // Test Functions for Golden Section Maximization
 double testfunc(double x) {
   return -std::pow(x, 2) + 6 * x + 6;
