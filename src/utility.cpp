@@ -80,7 +80,10 @@ double value(double x, NumericVector k, NumericVector vold) {
   return interp(k, vold, x);
 }
 
-double bellman(double k0, double k1, NumericVector k, NumericVector vold, const Params params) {
+double bellman(double k0, double k1, const Params params) {
+  NumericVector k = params.k;
+  NumericVector vold = params.vold;
+
   double c = consumption(k0, k1, params);
   if (c < 0.0) {
     return params.neg;
@@ -95,8 +98,6 @@ double bellman(double k0, double k1, NumericVector k, NumericVector vold, const 
 
 // Golden section search for maximizing value1
 double golden(double xout,
-              NumericVector k,
-              NumericVector vold,
               const Params params,
               double a,
               double b,
@@ -113,8 +114,8 @@ double golden(double xout,
     x2 = b;
     x1 = b - r2 * (b - a);
   }
-  double f1 = -bellman(xout, x1, k, vold, params);
-  double f2 = -bellman(xout, x2, k, vold, params);
+  double f1 = -bellman(xout, x1, params);
+  double f2 = -bellman(xout, x2, params);
 
   while (fabs(x3 - x0) > tol * (fabs(x1) + fabs(x2))) {
     if (f2 < f1) {
@@ -122,13 +123,13 @@ double golden(double xout,
       x1 = x2;
       x2 = r1 * x1 + r2 * x3;
       f1 = f2;
-      f2 = -bellman(xout, x2, k, vold, params);
+      f2 = -bellman(xout, x2, params);
     } else {
       x3 = x2;
       x2 = x1;
       x1 = r1 * x2 + r2 * x0;
       f2 = f1;
-      f1 = -bellman(xout, x1, k, vold, params);
+      f1 = -bellman(xout, x1, params);
     }
   }
   if (f1 <= f2) {

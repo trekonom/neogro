@@ -92,10 +92,12 @@ DataFrame neogro(int NK = 200,
   double crit = 1.0 + TOL;
   int h = 0;
 
+  params.k = k;
   // Main loop
   while (crit > TOL && h < MAXIT) {
     h++;
     for (int i = 0; i < NK; ++i) vold[i] = v[i];
+    params.vold = vold;
 
     int l0 = -1;
     for (int i = 0; i < NK; ++i) {
@@ -108,7 +110,7 @@ DataFrame neogro(int NK = 200,
         l += 1;
         c = consumption(k[i], k[l], params);
         if (c > 0.0) {
-          v1 = bellman(k[i], k[l], k, vold, params);
+          v1 = bellman(k[i], k[l], params);
           if (v1 > v0) {
             v[i] = v1;
             if (l == 0) {
@@ -142,19 +144,19 @@ DataFrame neogro(int NK = 200,
         if (value(bx, k, vold) < value(ax, k, vold)) {
           kopt[i] = k[0];
         } else {
-          kopt[i] = golden(k[i], k, vold, params, ax, bx, cx, TOL1);
+          kopt[i] = golden(k[i], params, ax, bx, cx, TOL1);
         }
       } else if (bx == cx) {
         bx = cx - ZETA * (k[NK-1] - k[NK-2]);
         if (value(bx, k, vold) < value(cx, k, vold)) {
           kopt[i] = k[NK-1];
         } else {
-          kopt[i] = golden(k[i], k, vold, params, ax, bx, cx, TOL1);
+          kopt[i] = golden(k[i], params, ax, bx, cx, TOL1);
         }
       } else {
-        kopt[i] = golden(k[i], k, vold, params, ax, bx, cx, TOL1);
+        kopt[i] = golden(k[i], params, ax, bx, cx, TOL1);
       }
-      v[i] = bellman(k[i], kopt[i], k, vold, params);
+      v[i] = bellman(k[i], kopt[i], params);
     }
 
     // Root mean squared error

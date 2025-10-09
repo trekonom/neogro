@@ -12,8 +12,8 @@
 #' k_steady_state(alpha = 0.33, beta = 0.96, delta = 0.05)
 #'
 #' @export
-test_golden <- function(*params), ax = -2.2, bx = 0.0, cx = 10.0, tol = .001) {
-    .Call(`_neogro_test_golden`, *params), ax, bx, cx, tol)
+test_golden <- function(ax = -2.2, bx = 0.0, cx = 10.0, tol = .001) {
+    .Call(`_neogro_test_golden`, ax, bx, cx, tol)
 }
 
 #' Solve the Neoclassical Growth Model
