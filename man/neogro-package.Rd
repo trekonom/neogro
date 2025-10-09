@@ -7,6 +7,14 @@
 \description{
 Solve the deterministic neoclassical growth model.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/trekonom/neogro}
+  \item Report bugs at \url{https://github.com/trekonom/neogro/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Stefan Moog \email{stefan.moog@prognos.com}
 
