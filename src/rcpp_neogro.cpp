@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "utility.h"
+#include "math.h"
 using namespace Rcpp;
 
 //' Solve the Neoclassical Growth Model
@@ -81,6 +82,7 @@ DataFrame neogro(int NK = 200,
   for (int i = 0; i < NK; ++i) {
     k[i] = kk_min + i * step;
   }
+  params.k = k;
 
   Rcpp::Rcout << "Steady-state capital stock: " << ks << std::endl;
 
@@ -92,7 +94,6 @@ DataFrame neogro(int NK = 200,
   double crit = 1.0 + TOL;
   int h = 0;
 
-  params.k = k;
   // Main loop
   while (crit > TOL && h < MAXIT) {
     h++;
@@ -105,6 +106,7 @@ DataFrame neogro(int NK = 200,
       double v0 = NEG;
       double ax = k[0], bx = k[0], cx = k[NK-1];
       double c, v1;
+      params.k0 = k[i];
 
       while (l < NK-1) {
         l += 1;
@@ -144,17 +146,17 @@ DataFrame neogro(int NK = 200,
         if (value(bx, k, vold) < value(ax, k, vold)) {
           kopt[i] = k[0];
         } else {
-          kopt[i] = golden(k[i], params, ax, bx, cx, TOL1);
+          kopt[i] = golden(bellman1, ax, bx, cx, TOL1, params);
         }
       } else if (bx == cx) {
         bx = cx - ZETA * (k[NK-1] - k[NK-2]);
         if (value(bx, k, vold) < value(cx, k, vold)) {
           kopt[i] = k[NK-1];
         } else {
-          kopt[i] = golden(k[i], params, ax, bx, cx, TOL1);
+          kopt[i] = golden(bellman1, ax, bx, cx, TOL1, params);
         }
       } else {
-        kopt[i] = golden(k[i], params, ax, bx, cx, TOL1);
+        kopt[i] = golden(bellman1, ax, bx, cx, TOL1, params);
       }
       v[i] = bellman(k[i], kopt[i], params);
     }
@@ -171,11 +173,11 @@ DataFrame neogro(int NK = 200,
 
     // Print iteration and error (to R console)
     if (verbose) {
-      Rcpp::Rcout << "iteration over value function: " << h << " error: " << crit << std::endl;
+      Rcpp::Rcout << "iteration: " << h << " error: " << crit << std::endl;
     }
   }
 
-  Rcpp::Rcout << "iteration over value function: " << h << " error: " << crit << std::endl;
+  Rcpp::Rcout << "number of iterations: " << h << " error: " << crit << std::endl;
 
   // consumption policy
   for (int i = 0; i < NK; ++i) {
