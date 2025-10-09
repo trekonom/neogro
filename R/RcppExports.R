@@ -3,17 +3,28 @@
 
 #' Test Golden Section Maximization
 #'
-#' This function computes the steady state capital stock of the standard
-#' deterministic neoclassical growth model
+#' @param ax,bx,cx interval and starting value for golden section
+#'     search
+#' @param tol tolerance for stopping criterion
 #'
-#' @return A `Numeric` with the following components:
+#' @return A `Numeric`
+#'
+#' @name test-golden
 #'
 #' @examples
-#' k_steady_state(alpha = 0.33, beta = 0.96, delta = 0.05)
-#'
+#' test_golden()
+NULL
+
+#' @rdname test-golden
 #' @export
 test_golden <- function(ax = -2.2, bx = 0.0, cx = 10.0, tol = .001) {
     .Call(`_neogro_test_golden`, ax, bx, cx, tol)
+}
+
+#' @rdname test-golden
+#' @export
+test_golden2 <- function(ax = -2.2, bx = 0.0, cx = 10.0, tol = .001) {
+    .Call(`_neogro_test_golden2`, ax, bx, cx, tol)
 }
 
 #' Solve the Neoclassical Growth Model
