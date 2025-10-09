@@ -10,6 +10,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// test_golden
+double test_golden(double (*fun)(double, void *params), double ax, double bx, double cx, double tol);
+RcppExport SEXP _neogro_test_golden(SEXP *params)SEXP, SEXP axSEXP, SEXP bxSEXP, SEXP cxSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double (*fun)(double, void >::type *params)(*params)SEXP);
+    Rcpp::traits::input_parameter< double >::type ax(axSEXP);
+    Rcpp::traits::input_parameter< double >::type bx(bxSEXP);
+    Rcpp::traits::input_parameter< double >::type cx(cxSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_golden(*params), ax, bx, cx, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // neogro
 DataFrame neogro(int NK, int MAXIT, double TOL, double TOL1, double NEG, double ZETA, double beta, double sigma, double alpha, double delta, bool verbose);
 RcppExport SEXP _neogro_neogro(SEXP NKSEXP, SEXP MAXITSEXP, SEXP TOLSEXP, SEXP TOL1SEXP, SEXP NEGSEXP, SEXP ZETASEXP, SEXP betaSEXP, SEXP sigmaSEXP, SEXP alphaSEXP, SEXP deltaSEXP, SEXP verboseSEXP) {
@@ -46,6 +61,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_neogro_test_golden", (DL_FUNC) &_neogro_test_golden, 5},
     {"_neogro_neogro", (DL_FUNC) &_neogro_neogro, 11},
     {"_neogro_k_steady_state", (DL_FUNC) &_neogro_k_steady_state, 3},
     {NULL, NULL, 0}
