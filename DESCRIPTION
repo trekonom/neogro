@@ -15,7 +15,9 @@ Imports:
     Rcpp
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 URL: https://github.com/trekonom/neogro
 BugReports: https://github.com/trekonom/neogro/issues
+Config/testthat/edition: 3

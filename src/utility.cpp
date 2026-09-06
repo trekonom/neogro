@@ -37,22 +37,22 @@ double uc(double c, double sigma) {
 }
 
 // output
-double output(double k, const Params params) {
+double output(double k, const Params& params) {
   return pow(k, params.alpha);
 }
 
 // consumption
-double consumption(double k0, double k1, const Params params) {
+double consumption(double k0, double k1, const Params& params) {
   return pow(k0, params.alpha) + (1.0 - params.delta) * k0 - k1;
 }
 
 // investment
-double investment(double k0, double k1, const Params params) {
+double investment(double k0, double k1, const Params& params) {
   return k1 - (1.0 - params.delta) * k0;
 }
 
 // residuals
-double residuals(double k1, double c0, NumericVector k, NumericVector copt, const Params params) {
+double residuals(double k1, double c0, NumericVector k, NumericVector copt, const Params& params) {
   double r;
   double c1 = interp(k, copt, k1);
 
@@ -67,13 +67,9 @@ double value(double x, NumericVector k, NumericVector vold) {
   return interp(k, vold, x);
 }
 
-double bellman1(double k1, const Params params) {
-  return bellman(params.k0, k1, params);
-}
-
-double bellman(double k0, double k1, const Params params) {
-  NumericVector k = params.k;
-  NumericVector vold = params.vold;
+double bellman(double k0, double k1, const Params& params) {
+  const NumericVector& k = params.k;
+  const NumericVector& vold = params.vold;
 
   double c = consumption(k0, k1, params);
   if (c < 0.0) {
@@ -85,5 +81,74 @@ double bellman(double k0, double k1, const Params params) {
       return u(c, params.sigma) + params.beta * value(k1, k, vold);
     }
   }
+}
+
+// Coarse grid search to bracket the optimal k1 for a given k0, then refine
+// with golden-section search. `l0` carries the search position across
+// successive calls (kopt(k0) is increasing in k0, so each call can resume
+// the coarse search where the previous one left off instead of scanning
+// the whole grid again).
+double find_kopt(double k0, int& l0, const Params& params, double ZETA, double TOL1) {
+  const NumericVector& k = params.k;
+  const int NK = k.size();
+
+  int l = l0, lopt = -1;
+  double v0 = params.neg;
+  double ax = k[0], bx = k[0], cx = k[NK - 1];
+
+  while (l < NK - 1) {
+    l += 1;
+    double c = consumption(k0, k[l], params);
+    if (c > 0.0) {
+      double v1 = bellman(k0, k[l], params);
+      if (v1 > v0) {
+        if (l == 0) {
+          ax = k[0]; bx = k[0]; cx = k[1];
+        } else if (l == NK - 1) {
+          ax = k[NK - 2]; bx = k[NK - 1]; cx = k[NK - 1];
+        } else {
+          ax = k[l - 1]; bx = k[l]; cx = k[l + 1];
+          lopt = l;
+        }
+        v0 = v1;
+        l0 = l - 1;
+      } else {
+        l = NK - 1;
+      }
+    } else {
+      l = NK - 1;
+    }
+  }
+
+  double kopt;
+  if (ax == bx) {
+    kopt = k[0];
+  } else if (bx == cx) {
+    kopt = k[NK - 1];
+  } else {
+    kopt = k[lopt];
+  }
+
+  auto objective = [&](double k1) { return bellman(k0, k1, params); };
+
+  if (ax == bx) {
+    bx = ax + ZETA * (k[1] - k[0]);
+    if (value(bx, k, params.vold) < value(ax, k, params.vold)) {
+      kopt = k[0];
+    } else {
+      kopt = golden(objective, ax, bx, cx, TOL1);
+    }
+  } else if (bx == cx) {
+    bx = cx - ZETA * (k[NK - 1] - k[NK - 2]);
+    if (value(bx, k, params.vold) < value(cx, k, params.vold)) {
+      kopt = k[NK - 1];
+    } else {
+      kopt = golden(objective, ax, bx, cx, TOL1);
+    }
+  } else {
+    kopt = golden(objective, ax, bx, cx, TOL1);
+  }
+
+  return kopt;
 }
 
