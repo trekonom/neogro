@@ -1,4 +1,4 @@
-# neogro 0.1.0
+# neogro 0.1.0.9000
 
 ## Internal changes
 
@@ -23,3 +23,12 @@
 
 These changes are internal/behind-the-scenes and do not change `neogro()`'s
 public interface or numerical output.
+
+## Documentation
+
+- Added a new vignette, `vignettes/simulating-growth.Rmd`, working through a
+  fuller example under a standard calibration: policy/value function plots,
+  a budget-constraint sanity check, and a simulated capital transition
+  path back to steady state.
+- The README and new vignette now use `ggplot2` for plotting instead of
+  base R graphics; `ggplot2` was added to `Suggests`.

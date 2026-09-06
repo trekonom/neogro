@@ -23,7 +23,11 @@ R console with working directory set to the package root (or via `Rscript -e`):
   `devtools::load_all()`
 - Full package check (build, compile, R CMD check): `devtools::check()`
 - Build the vignette / README: `devtools::build_vignettes()`,
-  `rmarkdown::render("README.Rmd")`
+  `devtools::build_readme()`. `vignettes/simulating-growth.Rmd` is a fuller
+  worked example (realistic calibration, policy/value plots, a
+  budget-constraint sanity check, and a capital transition simulation) —
+  useful as a template when eyeballing solver behavior after a change,
+  beyond what the automated tests check.
 
 - Run the test suite: `devtools::test()` (or `testthat::test_dir("tests/testthat")`)
 
@@ -34,15 +38,6 @@ sanity checks for `test_golden()`/`test_golden2()`, and a check that
 `neogro()` warns on non-convergence. These are the primary regression net
 for changes to the solver internals — run them after any change to
 `src/*.cpp`/`*.h`.
-
-In addition, manual/visual verification scripts live in `dev/` (git-ignored,
-excluded from the build via `.Rbuildignore`):
-- `dev/dev-test-golden.R` — sanity-checks the golden-section search against
-  `test_golden()`/`test_golden2()` (toy functions defined in `src/math.cpp`).
-- `dev/dev-check-neogro.R` — runs `neogro()`, writes `dev/policy.csv`, and
-  plots policy/value functions and a simulated capital path to visually
-  confirm the solver behaves as expected. Use this as the manual test when
-  changing solver internals.
 
 ## Architecture
 
