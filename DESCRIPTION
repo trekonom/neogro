@@ -1,6 +1,6 @@
 Package: neogro
 Title: Neoclassical Growth Model
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: 
     person("Stefan", "Moog", , "stefan.moog@prognos.com", role = c("aut", "cre"))
 Maintainer: Stefan Moog <stefan.moog@prognos.com>
