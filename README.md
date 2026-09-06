@@ -19,11 +19,12 @@ devtools::install_github("trekonom/neogro")
 
 ``` r
 library(neogro)
+library(ggplot2)
 
 # Solve the model with default parameters
 result <- neogro()
 #> Steady-state capital stock: 206.269
-#> iteration over value function: 366 error: 9.87148e-06
+#> number of iterations: 366 error: 9.87148e-06
 
 # View the first few rows
 head(result)
@@ -36,14 +37,13 @@ head(result)
 #> 6 108.3174 108.7414 3.288931 0.4239877 3.712919 -0.007062065 -44.14611
 
 # Plot the policy function
-plot(
-  result$k,
-  result$kopt,
-  type = "l",
-  main = "Policy Function",
-  xlab = "Capital (k)",
-  ylab = "Next Period Capital (k')"
-)
+ggplot(result, aes(k, kopt)) +
+  geom_line() +
+  labs(
+    title = "Policy Function",
+    x = "Capital (k)",
+    y = "Next Period Capital (k')"
+  )
 ```
 
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-2-1.png" alt="" width="100%" />

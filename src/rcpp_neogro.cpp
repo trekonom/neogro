@@ -71,7 +71,6 @@ DataFrame neogro(int NK = 200,
   params.alpha = alpha;
   params.delta = delta;
   params.neg = NEG;
-  params.k0 = 0.0;
 
   // Steady state and grid
   double ks = k_steady_state(alpha, beta, delta);
@@ -102,62 +101,7 @@ DataFrame neogro(int NK = 200,
 
     int l0 = -1;
     for (int i = 0; i < NK; ++i) {
-      int l = l0, lopt;
-      double v0 = NEG;
-      double ax = k[0], bx = k[0], cx = k[NK-1];
-      double c, v1;
-      params.k0 = k[i];
-
-      while (l < NK-1) {
-        l += 1;
-        c = consumption(k[i], k[l], params);
-        if (c > 0.0) {
-          v1 = bellman(k[i], k[l], params);
-          if (v1 > v0) {
-            v[i] = v1;
-            if (l == 0) {
-              ax = k[0]; bx = k[0]; cx = k[1];
-            } else if (l == NK-1) {
-              ax = k[NK-2]; bx = k[NK-1]; cx = k[NK-1];
-            } else {
-              ax = k[l-1]; bx = k[l]; cx = k[l+1];
-              lopt = l;
-            }
-            v0 = v1;
-            l0 = l-1;
-          } else {
-            l = NK-1;
-          }
-        } else {
-          l = NK-1;
-        }
-      }
-
-      if (ax == bx) {
-        kopt[i] = k[0];
-      } else if (bx == cx) {
-        kopt[i] = k[NK-1];
-      } else {
-        kopt[i] = k[lopt];
-      }
-
-      if (ax == bx) {
-        bx = ax + ZETA * (k[1] - k[0]);
-        if (value(bx, k, vold) < value(ax, k, vold)) {
-          kopt[i] = k[0];
-        } else {
-          kopt[i] = golden(bellman1, ax, bx, cx, TOL1, params);
-        }
-      } else if (bx == cx) {
-        bx = cx - ZETA * (k[NK-1] - k[NK-2]);
-        if (value(bx, k, vold) < value(cx, k, vold)) {
-          kopt[i] = k[NK-1];
-        } else {
-          kopt[i] = golden(bellman1, ax, bx, cx, TOL1, params);
-        }
-      } else {
-        kopt[i] = golden(bellman1, ax, bx, cx, TOL1, params);
-      }
+      kopt[i] = find_kopt(k[i], l0, params, ZETA, TOL1);
       v[i] = bellman(k[i], kopt[i], params);
     }
 
@@ -178,6 +122,13 @@ DataFrame neogro(int NK = 200,
   }
 
   Rcpp::Rcout << "number of iterations: " << h << " error: " << crit << std::endl;
+
+  if (crit > TOL) {
+    Rcpp::warning(
+      "neogro() did not converge after %d iterations (error = %g, TOL = %g)",
+      MAXIT, crit, TOL
+    );
+  }
 
   // consumption policy
   for (int i = 0; i < NK; ++i) {

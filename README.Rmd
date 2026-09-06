@@ -28,6 +28,7 @@ devtools::install_github("trekonom/neogro")
 
 ```{r}
 library(neogro)
+library(ggplot2)
 
 # Solve the model with default parameters
 result <- neogro()
@@ -36,12 +37,11 @@ result <- neogro()
 head(result)
 
 # Plot the policy function
-plot(
-  result$k,
-  result$kopt,
-  type = "l",
-  main = "Policy Function",
-  xlab = "Capital (k)",
-  ylab = "Next Period Capital (k')"
-)
+ggplot(result, aes(k, kopt)) +
+  geom_line() +
+  labs(
+    title = "Policy Function",
+    x = "Capital (k)",
+    y = "Next Period Capital (k')"
+  )
 ```

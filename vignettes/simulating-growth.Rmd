@@ -1,0 +1,129 @@
+---
+title: "Simulating the Neoclassical Growth Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulating the Neoclassical Growth Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4
+)
+```
+
+# Introduction
+
+This vignette works through a fuller example than the quick start in the
+README: we solve the model under a standard real-business-cycle calibration,
+inspect the resulting policy and value functions, sanity-check that the
+solver respects the resource constraint, and simulate a capital transition
+path back to the steady state.
+
+```{r setup}
+library(neogro)
+library(ggplot2)
+```
+
+# Solving the model
+
+```{r}
+alpha <- 0.36
+delta <- 0.05
+beta <- 0.96
+sigma <- 1.0
+
+k_steady <- k_steady_state(alpha = alpha, beta = beta, delta = delta)
+
+policy <- neogro(
+  NK = 501,
+  alpha = alpha,
+  beta = beta,
+  delta = delta,
+  sigma = sigma,
+  TOL = 1e-5,
+  TOL1 = 1e-7,
+  verbose = FALSE
+)
+
+policy_file <- file.path(tempdir(), "policy.csv")
+write.csv(policy, policy_file, row.names = FALSE)
+policy <- read.csv(policy_file)
+
+policy$resid_gdp <- policy$y - policy$copt - policy$iopt
+```
+
+# Policy, value, and residual diagnostics
+
+```{r, fig.width=7, fig.height=5}
+policy_long <- data.frame(
+  k = rep(policy$k, times = 5),
+  name = factor(
+    rep(c("kopt", "copt", "iopt", "y", "resid_gdp"), each = nrow(policy)),
+    levels = c("kopt", "copt", "iopt", "y", "resid_gdp")
+  ),
+  value = c(policy$kopt, policy$copt, policy$iopt, policy$y, policy$resid_gdp)
+)
+
+ggplot(policy_long, aes(k, value)) +
+  geom_line() +
+  geom_rug() +
+  facet_wrap(~name, scales = "free_y") +
+  labs(x = "Capital (k)", y = NULL)
+```
+
+`resid_gdp` should be numerically zero everywhere: it is the gap between
+output and its uses (consumption plus investment), so this panel is a check
+that the solver respects the economy's resource constraint.
+
+# Investment vs. depreciation
+
+```{r}
+ggplot(policy, aes(k)) +
+  geom_line(aes(y = iopt, color = "Investment")) +
+  geom_line(aes(y = delta * k, color = "Depreciation (delta * k)")) +
+  labs(x = "Capital (k)", y = NULL, color = NULL)
+```
+
+Where the two lines cross is (approximately) the steady state: investment
+exactly offsets depreciation, so capital stops growing.
+
+# Value function
+
+```{r}
+ggplot(policy, aes(k, vopt)) +
+  geom_line() +
+  labs(x = "Capital (k)", y = "Value function")
+```
+
+# Simulating a transition path
+
+Starting below steady state, repeatedly applying the (interpolated) policy
+function should converge capital toward `k_steady`.
+
+```{r}
+k0 <- 0.75 * k_steady
+horizon <- 200
+
+k_path <- numeric(horizon)
+k_path[1] <- k0
+for (t in 2:horizon) {
+  k_path[t] <- approx(policy$k, policy$kopt, k_path[t - 1])$y
+}
+
+ggplot(data.frame(time = seq_len(horizon), k = k_path), aes(time, k)) +
+  geom_line() +
+  geom_hline(yintercept = k_steady, color = "red", linetype = "dashed") +
+  labs(x = "Time", y = "Capital (k)")
+```
+
+# Conclusion
+
+This worked example illustrates how to solve the model under a realistic
+calibration, validate the solution against the economy's resource
+constraint, and use the policy function to simulate capital dynamics away
+from steady state.
